@@ -237,6 +237,46 @@ body {
   cursor: not-allowed;
 }
 
+/* Pinned to the end of the preset bar via margin-left: auto so it reads as
+   a distinct action ("do something with this state") rather than another
+   preset ("set part of this state"). */
+.copy-link-btn {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-4);
+  min-height: 44px;
+  cursor: pointer;
+  transition: border-color var(--motion-ui), color var(--motion-ui), background-color var(--motion-ui);
+}
+
+.copy-link-btn:hover {
+  color: var(--text);
+  border-color: var(--accent-support);
+}
+
+.copy-link-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.copy-link-btn:active {
+  transform: translateY(1px);
+}
+
+.copy-link-btn.is-copied {
+  color: var(--bg);
+  background: var(--accent-support);
+  border-color: var(--accent-support);
+}
+
 /* The rig: live element (~40%) beside the network + DOM patch panel stack
    (~60%), together occupying the majority of the viewport per DESIGN.md's
    layout intent. Connector lines are absolutely positioned over the grid
@@ -589,7 +629,8 @@ body {
     overflow-x: auto;
   }
 
-  .preset-group {
+  .preset-group,
+  .copy-link-btn {
     flex-shrink: 0;
   }
 }
