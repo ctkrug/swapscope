@@ -42,6 +42,17 @@ func TestDemoFragment(t *testing.T) {
 	}
 }
 
+func TestStaticUnknownPathNotFound(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/does-not-exist.html", nil)
+	rec := httptest.NewRecorder()
+
+	testMux().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusNotFound)
+	}
+}
+
 func TestDemoFragmentRejectsUnsupportedMethod(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/api/demo", nil)
 	rec := httptest.NewRecorder()
