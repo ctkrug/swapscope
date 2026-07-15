@@ -7,6 +7,9 @@ import {
   parseResponseHeaders,
   escapeHtml,
   splitHighlightSegments,
+  encodePresetState,
+  decodePresetState,
+  DEFAULT_PRESET_STATE,
 } from "./lab-core.mjs";
 
 test("demoUrl builds a relative, subpath-safe URL defaulting target to self", () => {
@@ -132,4 +135,36 @@ test("splitHighlightSegments highlights multiple separate matches", () => {
     { text: "<i>gap</i>", highlighted: false },
     { text: '<span data-gen="2">b</span>', highlighted: true },
   ]);
+});
+
+test("encodePresetState produces a stable, fully-specified query string", () => {
+  assert.equal(
+    encodePresetState({ swap: "outerHTML", trigger: "delay", target: "external", select: true, indicator: false }),
+    "swap=outerHTML&trigger=delay&target=external&select=1&indicator=0"
+  );
+});
+
+test("encodePresetState round-trips through decodePresetState", () => {
+  const state = { swap: "outerHTML", trigger: "revealed", target: "external", select: true, indicator: true };
+  assert.deepEqual(decodePresetState(encodePresetState(state)), state);
+});
+
+test("decodePresetState falls back to defaults for a missing query string", () => {
+  assert.deepEqual(decodePresetState(""), DEFAULT_PRESET_STATE);
+  assert.deepEqual(decodePresetState("?"), DEFAULT_PRESET_STATE);
+});
+
+test("decodePresetState falls back per-field for unknown or malformed values", () => {
+  assert.deepEqual(decodePresetState("swap=bogus&trigger=click&target=external"), {
+    ...DEFAULT_PRESET_STATE,
+    trigger: "click",
+    target: "external",
+  });
+  assert.deepEqual(decodePresetState("swap=;&garbage=1"), DEFAULT_PRESET_STATE);
+});
+
+test("decodePresetState treats select/indicator as boolean flags, not just any truthy value", () => {
+  assert.equal(decodePresetState("select=true").select, false);
+  assert.equal(decodePresetState("select=1").select, true);
+  assert.equal(decodePresetState("indicator=0").indicator, false);
 });
