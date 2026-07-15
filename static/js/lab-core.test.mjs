@@ -11,6 +11,7 @@ import {
   decodePresetState,
   DEFAULT_PRESET_STATE,
   nextRadioIndex,
+  describeRequestOutcome,
 } from "./lab-core.mjs";
 
 test("demoUrl builds a relative, subpath-safe URL defaulting target to self", () => {
@@ -196,4 +197,32 @@ test("nextRadioIndex is a no-op for a single-option group and for an empty group
   assert.equal(nextRadioIndex(0, "ArrowRight", 1), 0);
   assert.equal(nextRadioIndex(0, "ArrowLeft", 1), 0);
   assert.equal(nextRadioIndex(0, "ArrowRight", 0), 0);
+});
+
+test("describeRequestOutcome describes a successful self-target patch", () => {
+  assert.equal(
+    describeRequestOutcome({ status: 200, swap: "innerHTML", target: "self" }),
+    "Response 200 — patched the live element via innerHTML."
+  );
+});
+
+test("describeRequestOutcome describes an external-target patch", () => {
+  assert.equal(
+    describeRequestOutcome({ status: 200, swap: "outerHTML", target: "external" }),
+    "Response 200 — patched the external target via outerHTML."
+  );
+});
+
+test("describeRequestOutcome reports an error status without special-casing it", () => {
+  assert.equal(
+    describeRequestOutcome({ status: 500, swap: "innerHTML", target: "self" }),
+    "Response 500 — patched the live element via innerHTML."
+  );
+});
+
+test("describeRequestOutcome reports a failed request when status is falsy", () => {
+  assert.equal(
+    describeRequestOutcome({ status: 0, swap: "innerHTML", target: "self" }),
+    "Request failed — no response received."
+  );
 });
