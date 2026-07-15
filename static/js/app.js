@@ -11,6 +11,7 @@ import {
   encodePresetState,
   decodePresetState,
   nextRadioIndex,
+  describeRequestOutcome,
 } from "./lab-core.mjs";
 
 const fields = {
@@ -20,6 +21,7 @@ const fields = {
   requestHeaders: document.querySelector('[data-field="request-headers"]'),
   responseBody: document.querySelector('[data-field="response-body"]'),
   patchMarkup: document.querySelector('[data-field="patch-markup"]'),
+  statusAnnouncer: document.querySelector('[data-field="status-announcer"]'),
 };
 const connectorNetwork = document.querySelector(".connector--network");
 const connectorPatch = document.querySelector(".connector--patch");
@@ -37,6 +39,7 @@ const presetState = { ...decodePresetState(window.location.search) };
 // preset change mid-flight can't misattribute which target/swap the
 // in-flight response actually belongs to.
 let lastRequestState = { swap: presetState.swap, target: presetState.target };
+let lastResponseStatus = null;
 
 document.querySelectorAll(".preset-toggle").forEach((group) => {
   const presetKey = group.dataset.preset;
@@ -184,6 +187,7 @@ document.body.addEventListener("htmx:configRequest", (evt) => {
 document.body.addEventListener("htmx:afterRequest", (evt) => {
   const xhr = evt.detail.xhr;
   const status = xhr.status;
+  lastResponseStatus = status;
 
   fields.status.textContent = String(status);
   fields.status.className = `status-chip ${statusClass(status)}`.trim();
@@ -208,7 +212,20 @@ document.body.addEventListener("htmx:afterSwap", () => {
 // targets the stable .external-target-wrap, never the swapped node.)
 document.body.addEventListener("htmx:afterSettle", () => {
   renderPatchPanel();
+  announceRequestOutcome();
 });
+
+// A concise sentence for screen-reader users, in place of dumping the raw
+// (and often long) response body or patch markup into a live region —
+// see lab-core.mjs: describeRequestOutcome.
+function announceRequestOutcome() {
+  if (!fields.statusAnnouncer) return;
+  fields.statusAnnouncer.textContent = describeRequestOutcome({
+    status: lastResponseStatus,
+    swap: lastRequestState.swap,
+    target: lastRequestState.target,
+  });
+}
 
 function renderPatchPanel() {
   const carrierRoot =
