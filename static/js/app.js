@@ -2,14 +2,14 @@
 // network panel and the DOM patch panel. Nothing here simulates a request —
 // every value shown comes from the real XHR htmx just made.
 import {
-  demoUrlForSwap,
+  demoUrl,
+  triggerAttrForPreset,
   statusClass,
   parseResponseHeaders,
   escapeHtml,
   splitHighlightSegments,
 } from "./lab-core.mjs";
 
-const swapToggle = document.querySelector(".swap-toggle");
 const fields = {
   method: document.querySelector('[data-field="method"]'),
   url: document.querySelector('[data-field="url"]'),
@@ -21,35 +21,102 @@ const fields = {
 const connectorNetwork = document.querySelector(".connector--network");
 const connectorPatch = document.querySelector(".connector--patch");
 const rigPulse = document.querySelector(".rig-pulse");
+const externalTargetZone = document.getElementById("demo-target-external");
 
-let activeSwap = "innerHTML";
-let lastRequestSwap = "innerHTML";
+// The full preset picker's state. Each field is driven by one preset group
+// in the toolbar and, together, they determine every hx-* attribute on the
+// demo element — see syncDemoElAttributes().
+const presetState = {
+  swap: "innerHTML",
+  trigger: "click",
+  target: "self",
+  select: false,
+  indicator: false,
+};
 
-function applyPreset(swap) {
-  activeSwap = swap;
-  const target = document.getElementById("demo-el");
-  target.setAttribute("hx-get", demoUrlForSwap(swap));
-  target.setAttribute("hx-swap", swap);
-  // htmx resolves and caches an element's verb/path the first time it
-  // processes it; changing the hx-get attribute afterward is invisible
-  // until the element is reprocessed, or the old URL keeps firing.
-  htmx.process(target);
+// Captured at request time (rather than read fresh at afterSwap) so a
+// preset change mid-flight can't misattribute which target/swap the
+// in-flight response actually belongs to.
+let lastRequestState = { swap: presetState.swap, target: presetState.target };
 
-  swapToggle.querySelectorAll(".swap-toggle__option").forEach((btn) => {
-    const isActive = btn.dataset.swap === swap;
+document.querySelectorAll(".preset-toggle").forEach((group) => {
+  const presetKey = group.dataset.preset;
+  group.addEventListener("click", (evt) => {
+    const btn = evt.target.closest(".preset-toggle__option");
+    if (!btn || btn.disabled) return;
+    presetState[presetKey] = btn.dataset.value;
+    setActiveToggleOption(group, btn.dataset.value);
+    applyPreset();
+  });
+});
+
+document.querySelectorAll(".preset-switch").forEach((btn) => {
+  const presetKey = btn.dataset.presetSwitch;
+  btn.addEventListener("click", () => {
+    presetState[presetKey] = !presetState[presetKey];
+    setSwitchState(btn, presetState[presetKey]);
+    applyPreset();
+  });
+});
+
+function setActiveToggleOption(group, value) {
+  group.querySelectorAll(".preset-toggle__option").forEach((btn) => {
+    const isActive = btn.dataset.value === value;
     btn.classList.toggle("is-active", isActive);
     btn.setAttribute("aria-checked", String(isActive));
   });
 }
 
-swapToggle.addEventListener("click", (evt) => {
-  const btn = evt.target.closest(".swap-toggle__option");
-  if (!btn || btn.disabled) return;
-  applyPreset(btn.dataset.swap);
-});
+function setSwitchState(btn, isOn) {
+  btn.classList.toggle("is-on", isOn);
+  btn.setAttribute("aria-checked", String(isOn));
+  btn.querySelector(".preset-switch__state").textContent = isOn ? "on" : "off";
+}
+
+// Applies the current presetState to the live demo element and its
+// surrounding chrome. Called both when a preset control is clicked and
+// after every swap, because an outerHTML self-swap replaces #demo-el with
+// whatever the backend echoed back — and the backend only restates
+// hx-get/hx-target/hx-swap (see fragments.go), not hx-trigger/hx-select/
+// hx-indicator. Re-asserting the full state here is what keeps a trigger
+// (e.g. "revealed") or a switch (e.g. hx-select) from silently reverting to
+// its default after the very first outerHTML fire.
+function applyPreset() {
+  syncDemoElAttributes();
+  if (externalTargetZone) {
+    externalTargetZone.classList.toggle("is-active-target", presetState.target === "external");
+  }
+}
+
+function syncDemoElAttributes() {
+  const target = document.getElementById("demo-el");
+  if (!target) return;
+
+  target.setAttribute("hx-get", demoUrl(presetState));
+  target.setAttribute("hx-swap", presetState.swap);
+  target.setAttribute("hx-target", presetState.target === "external" ? "#demo-target-external" : "#demo-el");
+  target.setAttribute("hx-trigger", triggerAttrForPreset(presetState.trigger));
+
+  if (presetState.select) {
+    target.setAttribute("hx-select", "[data-fragment-content]");
+  } else {
+    target.removeAttribute("hx-select");
+  }
+
+  if (presetState.indicator) {
+    target.setAttribute("hx-indicator", "#demo-indicator");
+  } else {
+    target.removeAttribute("hx-indicator");
+  }
+
+  // htmx resolves and caches an element's verb/path/trigger the first time
+  // it processes it; changing these attributes afterward is invisible until
+  // the element is reprocessed.
+  htmx.process(target);
+}
 
 document.body.addEventListener("htmx:configRequest", (evt) => {
-  lastRequestSwap = activeSwap;
+  lastRequestState = { swap: presetState.swap, target: presetState.target };
   fields.method.textContent = evt.detail.verb.toUpperCase();
   fields.url.textContent = evt.detail.path;
   fields.requestHeaders.textContent = Object.entries(evt.detail.headers)
@@ -70,15 +137,19 @@ document.body.addEventListener("htmx:afterRequest", (evt) => {
 });
 
 document.body.addEventListener("htmx:afterSwap", () => {
+  syncDemoElAttributes();
   requestAnimationFrame(renderPatchPanel);
 });
 
 function renderPatchPanel() {
-  const target = document.getElementById("demo-el");
-  if (!target) return;
+  const carrierRoot =
+    lastRequestState.target === "external"
+      ? document.getElementById("demo-target-external")
+      : document.getElementById("demo-el");
+  if (!carrierRoot) return;
 
-  const markup = target.outerHTML;
-  const gen = currentGen(target, lastRequestSwap);
+  const markup = carrierRoot.outerHTML;
+  const gen = currentGen(carrierRoot, lastRequestState.swap);
 
   const html = splitHighlightSegments(markup, gen)
     .map((seg) =>
@@ -89,20 +160,20 @@ function renderPatchPanel() {
     .join("");
 
   fields.patchMarkup.innerHTML = html;
-  flashLiveElement(target);
+  flashLiveElement(carrierRoot);
 }
 
-function currentGen(target, swap) {
-  const carrier = swap === "outerHTML" ? target : target.querySelector("[data-gen]");
+function currentGen(carrierRoot, swap) {
+  const carrier = swap === "outerHTML" ? carrierRoot : carrierRoot.querySelector("[data-gen]");
   return carrier ? carrier.getAttribute("data-gen") : null;
 }
 
-function flashLiveElement(target) {
-  target.classList.remove("is-flashing");
+function flashLiveElement(carrierRoot) {
+  carrierRoot.classList.remove("is-flashing");
   // Force reflow so re-adding the class restarts the CSS animation even if
   // the previous flash hasn't finished (rapid repeated clicks).
-  void target.offsetWidth;
-  target.classList.add("is-flashing");
+  void carrierRoot.offsetWidth;
+  carrierRoot.classList.add("is-flashing");
 }
 
 function fireConnectors() {
@@ -150,5 +221,5 @@ function setLine(line, fromRect, toRect, rigRect) {
 }
 
 window.addEventListener("resize", positionConnectors);
-applyPreset("innerHTML");
+applyPreset();
 positionConnectors();
