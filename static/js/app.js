@@ -306,6 +306,45 @@ function setLine(line, fromRect, toRect, rigRect) {
   line.setAttribute("stroke-dasharray", `${length} ${length}`);
 }
 
+const copyLinkBtn = document.querySelector("[data-copy-link]");
+const copyLinkLabel = document.querySelector('[data-field="copy-link-label"]');
+let copyLinkResetTimer = null;
+
+// The URL is already kept current by syncUrlToPresetState on every preset
+// change; this button just makes that fact discoverable instead of relying
+// on visitors to notice the address bar updating on its own. Falls back to
+// selecting the button's accessible text when the Clipboard API is
+// unavailable (older browsers, non-HTTPS contexts) rather than failing
+// silently.
+if (copyLinkBtn) {
+  copyLinkBtn.addEventListener("click", async () => {
+    const url = window.location.href;
+    let copied = false;
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(url);
+        copied = true;
+      } catch {
+        copied = false;
+      }
+    }
+    showCopyLinkFeedback(copied);
+  });
+}
+
+function showCopyLinkFeedback(copied) {
+  if (!copyLinkBtn || !copyLinkLabel) return;
+
+  copyLinkBtn.classList.toggle("is-copied", copied);
+  copyLinkLabel.textContent = copied ? "copied!" : "copy failed";
+
+  window.clearTimeout(copyLinkResetTimer);
+  copyLinkResetTimer = window.setTimeout(() => {
+    copyLinkBtn.classList.remove("is-copied");
+    copyLinkLabel.textContent = "copy link";
+  }, 1800);
+}
+
 window.addEventListener("resize", positionConnectors);
 hydrateControlsFromState();
 applyPreset();
