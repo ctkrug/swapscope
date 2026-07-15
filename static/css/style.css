@@ -155,3 +155,69 @@ body {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* The rig: live element (~40%) beside the network + DOM patch panel stack
+   (~60%), together occupying the majority of the viewport per DESIGN.md's
+   layout intent. Connector lines are absolutely positioned over the grid
+   and given their endpoints by app.js (it measures the actual zones). */
+.rig {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2fr 3fr;
+  gap: var(--space-6);
+  min-height: 64vh;
+}
+
+.panels {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.connectors {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.connector {
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-dasharray: 6 6;
+  fill: none;
+  opacity: 0;
+}
+
+.zone {
+  position: relative;
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+}
+
+.zone--stage {
+  align-items: center;
+  justify-content: center;
+}
+
+.zone--network,
+.zone--patch {
+  flex: 1;
+}
+
+.zone__annotation {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-4);
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
