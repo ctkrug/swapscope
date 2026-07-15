@@ -86,6 +86,11 @@ query string (`swap`, `target`, `select=1`, `indicator=1`).
    `stroke-dashoffset` CSS animation reads as the line drawing itself rather than marching dashes.
    Below ~1024px the diagonal lines are hidden in favor of `.rig-pulse`, a simple vertical bar.
 
+The preset bar's "copy link" control (`app.js`, wired to `[data-copy-link]`) just makes this
+existing behavior discoverable — it copies `window.location.href` via the Clipboard API and
+shows a transient "copied!"/"copy failed" state, falling back to the failure state rather
+than a silent no-op when the API is unavailable.
+
 ## Accessibility
 
 The three `.preset-toggle` groups are real ARIA radiogroups, not just visually-grouped
