@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Attribute Lab — watch htmx happen</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <h1 class="wordmark">Attribute Lab</h1>
+    <p class="tagline">Click an hx-* preset. Watch the request and the DOM patch happen.</p>
+  </header>
+
+  <main id="lab-root">
+    <p>Scaffold placeholder — the preset picker, network panel, and DOM patch
+      panel land in the build phase. See <code>docs/VISION.md</code> and
+      <code>docs/BACKLOG.md</code> for the plan.</p>
+    <button id="demo-button" hx-get="/api/demo" hx-target="#demo-output" hx-swap="innerHTML">
+      Fire demo request
+    </button>
+    <div id="demo-output"></div>
+  </main>
+</body>
+</html>
