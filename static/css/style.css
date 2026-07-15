@@ -166,6 +166,63 @@ body {
   cursor: not-allowed;
 }
 
+/* hx-select / hx-indicator: a schematic-style LED toggle rather than an
+   iOS-style pill — the dot lights up (fills, gains a glow) when on, staying
+   in the blueprint idiom instead of borrowing an unrelated visual language. */
+.preset-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-4);
+  min-height: 44px;
+  cursor: pointer;
+  transition: border-color var(--motion-ui), color var(--motion-ui), background-color var(--motion-ui);
+}
+
+.preset-switch__track {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--line);
+  transition: background-color var(--motion-ui), box-shadow var(--motion-ui);
+}
+
+.preset-switch:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.preset-switch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.preset-switch:active {
+  transform: translateY(1px);
+}
+
+.preset-switch.is-on {
+  color: var(--bg);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.preset-switch.is-on .preset-switch__track {
+  background: var(--bg);
+  box-shadow: 0 0 6px 1px rgba(10, 24, 38, 0.6);
+}
+
+.preset-switch:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* The rig: live element (~40%) beside the network + DOM patch panel stack
    (~60%), together occupying the majority of the viewport per DESIGN.md's
    layout intent. Connector lines are absolutely positioned over the grid
