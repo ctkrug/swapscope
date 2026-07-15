@@ -55,6 +55,20 @@ body {
   box-sizing: border-box;
 }
 
+/* Screen-reader-only content: kept in the accessibility tree and announced
+   by aria-live, but never visible or able to affect layout. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 html {
   color-scheme: dark;
 }
