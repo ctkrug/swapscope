@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   demoUrl,
+  triggerAttrForPreset,
   statusClass,
   parseResponseHeaders,
   escapeHtml,
@@ -39,6 +40,17 @@ test("demoUrl rejects unknown swap styles and target presets", () => {
   assert.throws(() => demoUrl({ swap: "bogus" }), RangeError);
   assert.throws(() => demoUrl({ swap: "" }), RangeError);
   assert.throws(() => demoUrl({ swap: "innerHTML", target: "bogus" }), RangeError);
+});
+
+test("triggerAttrForPreset maps click, revealed, and delay presets", () => {
+  assert.equal(triggerAttrForPreset("click"), "click");
+  assert.equal(triggerAttrForPreset("revealed"), "revealed");
+  assert.equal(triggerAttrForPreset("delay"), "click delay:500ms");
+});
+
+test("triggerAttrForPreset rejects unknown presets", () => {
+  assert.throws(() => triggerAttrForPreset("bogus"), RangeError);
+  assert.throws(() => triggerAttrForPreset(""), RangeError);
 });
 
 test("statusClass buckets 2xx as success and 4xx/5xx as error", () => {
