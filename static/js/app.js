@@ -10,6 +10,7 @@ import {
   splitHighlightSegments,
   encodePresetState,
   decodePresetState,
+  nextRadioIndex,
 } from "./lab-core.mjs";
 
 const fields = {
@@ -46,6 +47,7 @@ document.querySelectorAll(".preset-toggle").forEach((group) => {
     setActiveToggleOption(group, btn.dataset.value);
     applyPreset();
   });
+  group.addEventListener("keydown", (evt) => handleRadiogroupKeydown(evt, group, presetKey));
 });
 
 document.querySelectorAll(".preset-switch").forEach((btn) => {
@@ -62,7 +64,31 @@ function setActiveToggleOption(group, value) {
     const isActive = btn.dataset.value === value;
     btn.classList.toggle("is-active", isActive);
     btn.setAttribute("aria-checked", String(isActive));
+    // Roving tabindex: only the checked radio is a Tab stop, matching the
+    // WAI-ARIA radiogroup pattern — Tab enters/exits the group in one stop,
+    // arrow keys (handleRadiogroupKeydown) move the checked option within it.
+    btn.tabIndex = isActive ? 0 : -1;
   });
+}
+
+// WAI-ARIA radiogroup keyboard pattern: arrow keys move and select the next
+// option (no separate "focus vs. select" step, matching native <input
+// type=radio> groups); Enter/Space aren't handled here because the buttons'
+// own click behavior already covers them.
+function handleRadiogroupKeydown(evt, group, presetKey) {
+  const options = Array.from(group.querySelectorAll(".preset-toggle__option")).filter(
+    (btn) => !btn.disabled
+  );
+  const currentIndex = options.findIndex((btn) => btn.dataset.value === presetState[presetKey]);
+  const nextIndex = nextRadioIndex(currentIndex, evt.key, options.length);
+  if (nextIndex === currentIndex) return;
+
+  evt.preventDefault();
+  const nextBtn = options[nextIndex];
+  presetState[presetKey] = nextBtn.dataset.value;
+  setActiveToggleOption(group, nextBtn.dataset.value);
+  nextBtn.focus();
+  applyPreset();
 }
 
 function setSwitchState(btn, isOn) {
