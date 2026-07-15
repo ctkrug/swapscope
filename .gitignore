@@ -1,0 +1,20 @@
+# Go
+/bin/
+/attribute-lab
+*.exe
+*.test
+*.out
+/coverage.out
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Env / local config
+.env
+.env.local
