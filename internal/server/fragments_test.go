@@ -50,6 +50,46 @@ func TestDemoFragmentRejectsUnsupportedSwapValue(t *testing.T) {
 	}
 }
 
+func TestDemoFragmentRejectsUnsupportedTargetValue(t *testing.T) {
+	rec := fireDemo(t, "?target=bogus")
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}
+
+func TestDemoFragmentDefaultsToSelfTarget(t *testing.T) {
+	rec := fireDemo(t, "?swap=outerHTML")
+
+	body := rec.Body.String()
+	if want := `id="demo-el"`; !strings.Contains(body, want) {
+		t.Fatalf("body = %q, want it to default to the self target (%q)", body, want)
+	}
+}
+
+func TestDemoFragmentExternalTargetInnerHTMLOmitsWrapper(t *testing.T) {
+	rec := fireDemo(t, "?swap=innerHTML&target=external")
+
+	body := rec.Body.String()
+	if strings.Contains(body, "demo-target-external") {
+		t.Fatalf("body = %q, innerHTML fragment must not include the external wrapper", body)
+	}
+}
+
+func TestDemoFragmentExternalTargetOuterHTMLIncludesWrapper(t *testing.T) {
+	rec := fireDemo(t, "?swap=outerHTML&target=external")
+
+	body := rec.Body.String()
+	for _, want := range []string{`id="demo-target-external"`, "external"} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("body = %q, want it to contain %q", body, want)
+		}
+	}
+	if strings.Contains(body, `id="demo-el"`) {
+		t.Fatalf("body = %q, external target swap must not re-declare the trigger button", body)
+	}
+}
+
 func TestDemoFragmentGenerationIncrementsAcrossRequests(t *testing.T) {
 	first := genOf(t, fireDemo(t, "").Body.String())
 	second := genOf(t, fireDemo(t, "").Body.String())
