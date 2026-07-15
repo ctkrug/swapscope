@@ -42,6 +42,17 @@ func TestDemoFragment(t *testing.T) {
 	}
 }
 
+func TestDemoFragmentRejectsUnsupportedMethod(t *testing.T) {
+	req := httptest.NewRequest(http.MethodPost, "/api/demo", nil)
+	rec := httptest.NewRecorder()
+
+	testMux().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusMethodNotAllowed)
+	}
+}
+
 func TestStaticIndex(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
