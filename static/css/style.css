@@ -187,8 +187,34 @@ body {
   stroke: var(--accent);
   stroke-width: 2;
   stroke-dasharray: 6 6;
+  stroke-dashoffset: 0;
   fill: none;
   opacity: 0;
+  transition: opacity var(--motion-connector);
+}
+
+/* app.js sets the dasharray to the line's own length and toggles this
+   class; the browser animates dashoffset from full-length (invisible)
+   to 0 (fully traced) — the "line drawing itself" signature detail. */
+.connector.is-firing {
+  opacity: 1;
+  animation: connector-trace var(--motion-connector) ease-out forwards;
+}
+
+@keyframes connector-trace {
+  from {
+    stroke-dashoffset: var(--connector-length, 0);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .connector.is-firing {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
 }
 
 .zone {
