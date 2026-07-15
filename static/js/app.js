@@ -8,6 +8,9 @@ import {
   parseResponseHeaders,
   escapeHtml,
   splitHighlightSegments,
+  encodePresetState,
+  decodePresetState,
+  DEFAULT_PRESET_STATE,
 } from "./lab-core.mjs";
 
 const fields = {
