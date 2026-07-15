@@ -107,7 +107,7 @@ polish on top of a working demo, not a prerequisite to it.
   - Panel updates (network result, patch highlight) are announced via an `aria-live`
     region.
 
-- [ ] **4.3 — Static build for subpath deployment**
+- [x] **4.3 — Static build for subpath deployment**
   The frontend builds into a single self-contained directory usable at
   `apps.charliekrug.com/attribute-lab` (a subpath, not the domain root).
   - All asset references (CSS, JS, fonts) are relative, not root-absolute — verified by
