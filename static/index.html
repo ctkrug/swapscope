@@ -24,11 +24,46 @@
   </header>
 
   <main id="lab-root">
-    <section class="preset-bar" aria-label="hx-swap preset picker">
-      <span class="preset-bar__label">hx-swap</span>
-      <div class="swap-toggle" role="radiogroup" aria-label="swap strategy">
-        <button type="button" class="swap-toggle__option is-active" data-swap="innerHTML" role="radio" aria-checked="true">innerHTML</button>
-        <button type="button" class="swap-toggle__option" data-swap="outerHTML" role="radio" aria-checked="false">outerHTML</button>
+    <section class="preset-bar" aria-label="hx-* attribute preset picker">
+      <div class="preset-group">
+        <span class="preset-group__label">hx-swap</span>
+        <div class="preset-toggle" data-preset="swap" role="radiogroup" aria-label="swap strategy">
+          <button type="button" class="preset-toggle__option is-active" data-value="innerHTML" role="radio" aria-checked="true">innerHTML</button>
+          <button type="button" class="preset-toggle__option" data-value="outerHTML" role="radio" aria-checked="false">outerHTML</button>
+        </div>
+      </div>
+
+      <div class="preset-group">
+        <span class="preset-group__label">hx-trigger</span>
+        <div class="preset-toggle" data-preset="trigger" role="radiogroup" aria-label="trigger">
+          <button type="button" class="preset-toggle__option is-active" data-value="click" role="radio" aria-checked="true">click</button>
+          <button type="button" class="preset-toggle__option" data-value="revealed" role="radio" aria-checked="false">revealed</button>
+          <button type="button" class="preset-toggle__option" data-value="delay" role="radio" aria-checked="false">delay:500ms</button>
+        </div>
+      </div>
+
+      <div class="preset-group">
+        <span class="preset-group__label">hx-target</span>
+        <div class="preset-toggle" data-preset="target" role="radiogroup" aria-label="target">
+          <button type="button" class="preset-toggle__option is-active" data-value="self" role="radio" aria-checked="true">self</button>
+          <button type="button" class="preset-toggle__option" data-value="external" role="radio" aria-checked="false">external</button>
+        </div>
+      </div>
+
+      <div class="preset-group">
+        <span class="preset-group__label">hx-select</span>
+        <button type="button" class="preset-switch" data-preset-switch="select" role="switch" aria-checked="false">
+          <span class="preset-switch__track" aria-hidden="true"></span>
+          <span class="preset-switch__state">off</span>
+        </button>
+      </div>
+
+      <div class="preset-group">
+        <span class="preset-group__label">hx-indicator</span>
+        <button type="button" class="preset-switch" data-preset-switch="indicator" role="switch" aria-checked="false">
+          <span class="preset-switch__track" aria-hidden="true"></span>
+          <span class="preset-switch__state">off</span>
+        </button>
       </div>
     </section>
 
