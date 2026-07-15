@@ -76,18 +76,33 @@ func handleDemo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	selectable := query.Get("select") == "1"
+
 	gen := atomic.AddInt64(&demoGen, 1)
 
+	payload := renderDemoFragment(swap, target, gen, selectable)
+	if selectable {
+		payload = wrapWithSelectNoise(payload)
+	}
+
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	fmt.Fprint(w, renderDemoFragment(swap, target, gen))
+	fmt.Fprint(w, payload)
 }
 
 // renderDemoFragment builds the fragment body for the given swap/target
-// combination and generation counter.
-func renderDemoFragment(swap swapStyle, target targetKind, gen int64) string {
+// combination and generation counter. When selectable is true, the root
+// element of the swap-worthy payload carries a data-fragment-content
+// attribute so hx-select="[data-fragment-content]" can pick it out from the
+// noise siblings wrapWithSelectNoise adds around it.
+func renderDemoFragment(swap swapStyle, target targetKind, gen int64, selectable bool) string {
+	selectAttr := ""
+	if selectable {
+		selectAttr = " data-fragment-content"
+	}
+
 	content := fmt.Sprintf(
-		`<span class="demo-el__label" data-gen="%d">Request #%d handled by <code>%s</code> &rarr; <code>%s</code></span>`,
-		gen, gen, swap, target,
+		`<span class="demo-el__label"%s data-gen="%d">Request #%d handled by <code>%s</code> &rarr; <code>%s</code></span>`,
+		selectAttr, gen, gen, swap, target,
 	)
 
 	if swap == swapInnerHTML {
@@ -96,14 +111,28 @@ func renderDemoFragment(swap swapStyle, target targetKind, gen int64) string {
 
 	if target == targetExternal {
 		return fmt.Sprintf(
-			`<div id="demo-target-external" class="demo-target-external" data-gen="%d">%s</div>`,
-			gen, content,
+			`<div id="demo-target-external" class="demo-target-external"%s data-gen="%d">%s</div>`,
+			selectAttr, gen, content,
 		)
 	}
 
 	return fmt.Sprintf(
-		`<button id="demo-el" class="demo-el" data-gen="%d" `+
+		`<button id="demo-el" class="demo-el"%s data-gen="%d" `+
 			`hx-get="api/demo?swap=outerHTML&amp;target=self" hx-target="#demo-el" hx-swap="outerHTML">%s</button>`,
-		gen, content,
+		selectAttr, gen, content,
+	)
+}
+
+// wrapWithSelectNoise surrounds payload with sibling elements that a real
+// htmx response might carry (surrounding layout, unrelated widgets) but that
+// hx-select is meant to filter out before the swap. The demo's hx-select
+// preset targets [data-fragment-content], so only payload itself ends up in
+// the DOM — the network panel still shows this full, unfiltered body,
+// which is what makes the response-vs-DOM distinction visible.
+func wrapWithSelectNoise(payload string) string {
+	return fmt.Sprintf(
+		`<p class="fragment-noise" aria-hidden="true">// not selected: preceding sibling</p>%s`+
+			`<p class="fragment-noise" aria-hidden="true">// not selected: trailing sibling</p>`,
+		payload,
 	)
 }
