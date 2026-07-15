@@ -67,6 +67,33 @@ export function decodePresetState(search) {
 }
 
 /**
+ * Computes the next focused index for an ARIA `radiogroup` of `count`
+ * options given the currently-focused index and a keydown key name, per the
+ * WAI-ARIA roving-tabindex pattern (Right/Down moves forward, Left/Up moves
+ * backward, both wrapping; Home/End jump to the ends). Any other key leaves
+ * the index unchanged so callers can pass every keydown through without
+ * pre-filtering. Pure and DOM-free so the wrap-around/no-op edges are
+ * testable without a browser.
+ */
+export function nextRadioIndex(currentIndex, key, count) {
+  if (count <= 0) return currentIndex;
+  switch (key) {
+    case "ArrowRight":
+    case "ArrowDown":
+      return (currentIndex + 1) % count;
+    case "ArrowLeft":
+    case "ArrowUp":
+      return (currentIndex - 1 + count) % count;
+    case "Home":
+      return 0;
+    case "End":
+      return count - 1;
+    default:
+      return currentIndex;
+  }
+}
+
+/**
  * Builds the hx-trigger attribute value for a given trigger preset. "delay"
  * still fires on click, just 500ms after it — hx-trigger's modifier syntax
  * is a single space-separated string, so this is the whole reason the
