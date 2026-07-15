@@ -86,6 +86,19 @@ query string (`swap`, `target`, `select=1`, `indicator=1`).
    `stroke-dashoffset` CSS animation reads as the line drawing itself rather than marching dashes.
    Below ~1024px the diagonal lines are hidden in favor of `.rig-pulse`, a simple vertical bar.
 
+## Shareable preset links
+
+`presetState` is seeded on load from `window.location.search` via `lab-core.mjs:
+decodePresetState`, and `app.js: applyPreset` rewrites the URL (via `history.replaceState`,
+never `pushState` — clicking through presets shouldn't spam browser history) to
+`encodePresetState(presetState)` after every change. The two are inverses, so copying the
+address bar at any point reproduces the exact demo on screen. `decodePresetState` validates
+each field independently against the known preset lists and falls back to
+`DEFAULT_PRESET_STATE` per-field, so a hand-edited or stale URL degrades to the default demo
+instead of crashing. `app.js: hydrateControlsFromState` reconciles the visible toggle/switch
+chips with the seeded state at load — `applyPreset` alone only drives the demo element's
+attributes, not the picker's own chip styling.
+
 ## Why the highlight logic lives in a separate pure module
 
 `lab-core.mjs` has no DOM access, which is what makes it runnable directly under
