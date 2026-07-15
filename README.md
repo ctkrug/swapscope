@@ -1,5 +1,7 @@
 # Attribute Lab
 
+[![CI](https://github.com/ctkrug/attribute-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/ctkrug/attribute-lab/actions/workflows/ci.yml)
+
 Click an `hx-*` attribute preset on a live demo element and watch the actual network
 request and the resulting DOM patch animate **in sync, side by side**. Not a cheat sheet
 you read — a machine you watch run.
@@ -51,7 +53,8 @@ you *see happen*, not something you infer from a paragraph.
 
 ## Status
 
-Early scaffold — see [`docs/VISION.md`](docs/VISION.md) for the full design and
+Early scaffold — see [`docs/VISION.md`](docs/VISION.md) for the full design,
+[`docs/DESIGN.md`](docs/DESIGN.md) for the visual direction, and
 [`docs/BACKLOG.md`](docs/BACKLOG.md) for the build plan.
 
 ## License
