@@ -78,7 +78,7 @@ polish on top of a working demo, not a prerequisite to it.
   - Comparison mode is reachable from the main view via a single control, not a separate
     page reload.
 
-- [ ] **3.2 — Shareable preset links**
+- [x] **3.2 — Shareable preset links**
   The full preset state (swap/trigger/target/select/indicator, and comparison mode if
   active) is encoded in the URL.
   - Copying the current URL, opening it in a new tab, reproduces the identical preset
