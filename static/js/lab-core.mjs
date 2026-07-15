@@ -1,0 +1,151 @@
+// Pure logic for Attribute Lab's instrumentation panels. No DOM access here
+// on purpose — it's what makes this module runnable directly under
+// `node --test`, independent of a browser.
+
+export const SWAP_STYLES = ["innerHTML", "outerHTML"];
+
+/**
+ * Builds the demo endpoint URL for a given swap style. Relative (no leading
+ * slash) so it resolves correctly under a subpath deployment.
+ */
+export function demoUrlForSwap(swap) {
+  if (!SWAP_STYLES.includes(swap)) {
+    throw new RangeError(`unsupported swap style: ${swap}`);
+  }
+  return `api/demo?swap=${swap}`;
+}
+
+/**
+ * Classifies an HTTP status code for the network panel's status chip.
+ */
+export function statusClass(status) {
+  if (status >= 200 && status < 300) return "is-success";
+  if (status >= 400 && status < 600) return "is-error";
+  return "";
+}
+
+/**
+ * Parses the raw string XHR.getAllResponseHeaders() returns into an
+ * ordered list of [name, value] pairs (headers are case-insensitive and can
+ * repeat, so a plain object would be lossy).
+ */
+export function parseResponseHeaders(raw) {
+  if (!raw) return [];
+  return raw
+    .trim()
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .map((line) => {
+      const idx = line.indexOf(":");
+      if (idx === -1) return [line.trim(), ""];
+      return [line.slice(0, idx).trim(), line.slice(idx + 1).trim()];
+    });
+}
+
+/**
+ * Escapes text for safe insertion into HTML via innerHTML.
+ */
+export function escapeHtml(str) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/**
+ * Splits `markup` into segments, marking as highlighted the element(s)
+ * whose opening tag carries `data-gen="<gen>"`. Matches nested inside an
+ * already-highlighted range are absorbed rather than double-wrapped, so an
+ * outerHTML swap (where the outer element and its inner content share the
+ * same generation stamp) highlights just the outer boundary.
+ *
+ * Returns an array of { text, highlighted } segments covering the whole
+ * input string in order — callers escape each segment themselves before
+ * rendering, keeping this function free of any HTML-generation concerns.
+ */
+export function splitHighlightSegments(markup, gen) {
+  const ranges = findGenRanges(markup, gen);
+  if (ranges.length === 0) {
+    return [{ text: markup, highlighted: false }];
+  }
+
+  const segments = [];
+  let cursor = 0;
+  for (const [start, end] of ranges) {
+    if (start > cursor) {
+      segments.push({ text: markup.slice(cursor, start), highlighted: false });
+    }
+    segments.push({ text: markup.slice(start, end), highlighted: true });
+    cursor = end;
+  }
+  if (cursor < markup.length) {
+    segments.push({ text: markup.slice(cursor), highlighted: false });
+  }
+  return segments;
+}
+
+function findGenRanges(markup, gen) {
+  const marker = `data-gen="${gen}"`;
+  const matches = [];
+  let searchFrom = 0;
+
+  while (true) {
+    const idx = markup.indexOf(marker, searchFrom);
+    if (idx === -1) break;
+    searchFrom = idx + marker.length;
+
+    const tagStart = markup.lastIndexOf("<", idx);
+    if (tagStart === -1) continue;
+
+    const tagNameMatch = /^<([a-zA-Z][a-zA-Z0-9-]*)/.exec(markup.slice(tagStart));
+    if (!tagNameMatch) continue;
+
+    const tagEnd = findMatchingTagEnd(markup, tagStart, tagNameMatch[1]);
+    if (tagEnd !== -1) {
+      matches.push([tagStart, tagEnd]);
+    }
+  }
+
+  matches.sort((a, b) => a[0] - b[0]);
+
+  const kept = [];
+  for (const range of matches) {
+    const prev = kept[kept.length - 1];
+    if (prev && range[0] < prev[1]) continue; // nested inside a kept range
+    kept.push(range);
+  }
+  return kept;
+}
+
+/**
+ * Finds the end index (exclusive) of the closing tag matching the opening
+ * tag at `tagStart`, accounting for same-name nesting.
+ */
+function findMatchingTagEnd(markup, tagStart, tagName) {
+  const openTagClose = markup.indexOf(">", tagStart);
+  if (openTagClose === -1) return -1;
+
+  const openToken = `<${tagName}`;
+  const closeToken = `</${tagName}>`;
+
+  let depth = 1;
+  let pos = openTagClose + 1;
+
+  while (depth > 0) {
+    const nextOpen = markup.indexOf(openToken, pos);
+    const nextClose = markup.indexOf(closeToken, pos);
+    if (nextClose === -1) return -1;
+
+    if (nextOpen !== -1 && nextOpen < nextClose) {
+      depth++;
+      pos = markup.indexOf(">", nextOpen) + 1;
+    } else {
+      depth--;
+      pos = nextClose + closeToken.length;
+    }
+  }
+
+  return pos;
+}
