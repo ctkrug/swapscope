@@ -72,12 +72,18 @@
         <p class="zone__annotation">LIVE ELEMENT</p>
         <div class="demo-stage">
           <button id="demo-el" class="demo-el" data-gen="0"
-            hx-get="api/demo?swap=innerHTML"
+            hx-get="api/demo?swap=innerHTML&amp;target=self"
             hx-target="#demo-el"
             hx-swap="innerHTML"
-            hx-trigger="click">
+            hx-trigger="click"
+            hx-indicator="#demo-indicator">
             <span class="demo-el__label" data-gen="0">Fire request</span>
           </button>
+          <span id="demo-indicator" class="htmx-indicator" aria-hidden="true">&#9679; awaiting response&hellip;</span>
+        </div>
+        <div id="demo-target-external" class="demo-target-external" data-gen="0">
+          <p class="zone__annotation zone__annotation--inline">EXTERNAL TARGET</p>
+          <span class="demo-el__label" data-gen="0">idle — select the "external" hx-target preset above</span>
         </div>
       </section>
 
