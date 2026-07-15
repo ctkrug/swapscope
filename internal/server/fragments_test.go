@@ -131,6 +131,22 @@ func TestDemoFragmentWithoutSelectOmitsNoiseAndMarker(t *testing.T) {
 	}
 }
 
+func TestDemoFragmentSelectMarksTheExternalOuterHTMLWrapper(t *testing.T) {
+	rec := fireDemo(t, "?swap=outerHTML&target=external&select=1")
+
+	body := rec.Body.String()
+	for _, want := range []string{"fragment-noise", `id="demo-target-external"`, `data-fragment-content`} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("body = %q, want it to contain %q", body, want)
+		}
+	}
+	// The marker must sit on the external div itself (the node hx-select
+	// picks and outerHTML swaps in), not merely somewhere in the noise.
+	if !strings.Contains(body, `class="demo-target-external" data-fragment-content data-gen`) {
+		t.Fatalf("body = %q, want data-fragment-content on the external wrapper element", body)
+	}
+}
+
 func TestDemoFragmentIndicatorDelaysTheResponse(t *testing.T) {
 	original := demoIndicatorDelay
 	demoIndicatorDelay = 30 * time.Millisecond
