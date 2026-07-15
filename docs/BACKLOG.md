@@ -5,7 +5,7 @@ polish on top of a working demo, not a prerequisite to it.
 
 ## Epic 1 — Core swap visualization (the wow moment)
 
-- [ ] **1.1 — Swap-strategy toggle fires a synced request + DOM patch (WOW MOMENT)**
+- [x] **1.1 — Swap-strategy toggle fires a synced request + DOM patch (WOW MOMENT)**
   The live demo element has an `hx-swap` toggle (innerHTML ⇄ outerHTML). Toggling it and
   clicking the trigger fires a real htmx request against the Go backend and visibly patches
   the DOM within the same second.
@@ -16,7 +16,7 @@ polish on top of a working demo, not a prerequisite to it.
     innerHTML does not).
   - End-to-end latency from click to patch-highlight is under 1 second on localhost.
 
-- [ ] **1.2 — Network panel shows the real request and response**
+- [x] **1.2 — Network panel shows the real request and response**
   A panel renders the actual HTTP transaction htmx just performed, sourced from htmx
   lifecycle events, not a simulated readout.
   - Panel displays method, URL, request headers, response status, and response body for
@@ -24,14 +24,14 @@ polish on top of a working demo, not a prerequisite to it.
   - Values match what the Go backend actually sent/received (verified by comparing panel
     output to a `curl` of the same endpoint).
 
-- [ ] **1.3 — DOM patch panel flash-highlights swapped nodes**
+- [x] **1.3 — DOM patch panel flash-highlights swapped nodes**
   The panel renders the live element's current markup and flashes exactly the node(s)
   htmx swapped on the most recent request.
   - Flash-highlight is scoped to the actual swapped node(s), not the whole panel.
   - `htmx:afterSwap` is the trigger for the highlight — verified by firing two different
     presets in a row and confirming the highlight target changes each time.
 
-- [ ] **1.4 — Design polish: blueprint layout for the core view**
+- [x] **1.4 — Design polish: blueprint layout for the core view**
   The Epic 1 view matches `docs/DESIGN.md`: blueprint tokens, graph-paper background
   treatment, and the animated dashed connector lines from demo element to both panels.
   - Colors, fonts, and spacing match the token table in `docs/DESIGN.md`.
