@@ -1,0 +1,25 @@
+/* Placeholder base styles — replaced with the docs/DESIGN.md tokens
+   and layout during the build phase. */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  padding: 2rem;
+}
+
+.site-header {
+  margin-bottom: 2rem;
+}
+
+.wordmark {
+  margin: 0 0 0.25rem;
+}
+
+.tagline {
+  margin: 0;
+  color: #555;
+}
