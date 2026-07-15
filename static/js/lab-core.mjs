@@ -22,6 +22,27 @@ export function demoUrl({ swap, target = "self", select = false, indicator = fal
   return `api/demo?${params.toString()}`;
 }
 
+export const TRIGGER_PRESETS = ["click", "revealed", "delay"];
+
+/**
+ * Builds the hx-trigger attribute value for a given trigger preset. "delay"
+ * still fires on click, just 500ms after it — hx-trigger's modifier syntax
+ * is a single space-separated string, so this is the whole reason the
+ * preset needs its own builder rather than a 1:1 attribute value.
+ */
+export function triggerAttrForPreset(preset) {
+  switch (preset) {
+    case "click":
+      return "click";
+    case "revealed":
+      return "revealed";
+    case "delay":
+      return "click delay:500ms";
+    default:
+      throw new RangeError(`unsupported trigger preset: ${preset}`);
+  }
+}
+
 /**
  * Classifies an HTTP status code for the network panel's status chip.
  */
