@@ -3,6 +3,8 @@
 package main
 
 import (
+	"embed"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -10,10 +12,18 @@ import (
 	"github.com/ctkrug/attribute-lab/internal/server"
 )
 
+//go:embed static
+var staticFS embed.FS
+
 func main() {
 	addr := ":" + envOr("PORT", "8080")
 
-	mux := server.New()
+	static, err := fs.Sub(staticFS, "static")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	mux := server.New(static)
 
 	log.Printf("attribute-lab listening on %s", addr)
 	if err := http.ListenAndServe(addr, mux); err != nil {
