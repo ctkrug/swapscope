@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -202,6 +203,28 @@ func TestDemoFragmentWithoutIndicatorDoesNotDelay(t *testing.T) {
 	fireDemo(t, "")
 	if elapsed := time.Since(start); elapsed >= demoIndicatorDelay {
 		t.Fatalf("elapsed = %v, want a response well under the indicator delay of %v", elapsed, demoIndicatorDelay)
+	}
+}
+
+func TestDemoFragmentGenerationIsUniqueUnderConcurrentRequests(t *testing.T) {
+	const n = 50
+	gens := make([]int, n)
+	var wg sync.WaitGroup
+	wg.Add(n)
+	for i := 0; i < n; i++ {
+		go func(i int) {
+			defer wg.Done()
+			gens[i] = genOf(t, fireDemo(t, "").Body.String())
+		}(i)
+	}
+	wg.Wait()
+
+	seen := make(map[int]bool, n)
+	for _, g := range gens {
+		if seen[g] {
+			t.Fatalf("gen %d was issued more than once across %d concurrent requests", g, n)
+		}
+		seen[g] = true
 	}
 }
 
