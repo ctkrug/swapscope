@@ -133,6 +133,25 @@ test("a per-lab afterRequest lands only in that lab's readout", async () => {
   assert.equal(document.querySelector('.zone--network [data-field="status"]').textContent, "—");
 });
 
+test("hx-indicator applies to both labs and settling announces the outcome", async () => {
+  const { document } = await boot("?compare=1&indicator=1");
+
+  for (const id of ["cmp-inner-el", "cmp-outer-el"]) {
+    assert.equal(document.getElementById(id).getAttribute("hx-indicator"), `#${id.replace("-el", "-indicator")}`);
+  }
+
+  const inner = document.getElementById("cmp-inner-el");
+  fireHtmxEvent(document, "htmx:afterRequest", {
+    elt: inner,
+    xhr: { status: 200, responseText: "<span data-gen=\"4\">ok</span>", getAllResponseHeaders: () => "" },
+  });
+  fireHtmxEvent(document, "htmx:afterSettle", { elt: inner });
+
+  const announced = document.querySelector('[data-field="status-announcer"]').textContent;
+  assert.match(announced, /Response 200/);
+  assert.match(announced, /innerHTML/);
+});
+
 test("outerHTML lab re-stamps its own id after a swap replaces the element", async () => {
   const { document, processed } = await boot("?compare=1");
   const outerLab = document.querySelector('.compare-lab[data-lab-swap="outerHTML"]');
