@@ -195,6 +195,13 @@ test("decodePresetState treats select/indicator as boolean flags, not just any t
   assert.equal(decodePresetState("indicator=0").indicator, false);
 });
 
+test("decodePresetState uses the first value when a key repeats", () => {
+  assert.deepEqual(decodePresetState("swap=outerHTML&swap=innerHTML"), {
+    ...DEFAULT_PRESET_STATE,
+    swap: "outerHTML",
+  });
+});
+
 test("nextRadioIndex moves forward on ArrowRight/ArrowDown and wraps at the end", () => {
   assert.equal(nextRadioIndex(0, "ArrowRight", 3), 1);
   assert.equal(nextRadioIndex(2, "ArrowRight", 3), 0);
