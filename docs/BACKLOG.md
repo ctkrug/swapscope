@@ -19,8 +19,8 @@ polish on top of a working demo, not a prerequisite to it.
 - [x] **1.2 — Network panel shows the real request and response**
   A panel renders the actual HTTP transaction htmx just performed, sourced from htmx
   lifecycle events, not a simulated readout.
-  - Panel displays method, URL, request headers, response status, and response body for
-    the most recent request.
+  - Panel displays method, URL, request headers, response status, response headers, and
+    response body for the most recent request.
   - Values match what the Go backend actually sent/received (verified by comparing panel
     output to a `curl` of the same endpoint).
 

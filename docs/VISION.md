@@ -31,7 +31,7 @@ strategy, trigger, target, request method). Pressing the trigger fires the real 
 request against a real Go backend — no mocking — and two panels update in sync:
 
 1. **Network panel** — the actual request (method, URL, headers) and response (status,
-   body) htmx just sent and received.
+   headers, body) htmx just sent and received.
 2. **DOM patch panel** — the live element itself, with the exact nodes htmx swapped
    flash-highlighted the instant the swap lands.
 

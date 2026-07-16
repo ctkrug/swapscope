@@ -28,7 +28,8 @@ you *see happen*, not something you infer from a paragraph.
 - The frontend is plain **HTMX** wired to a live demo element. A lightweight instrumentation
   layer taps `htmx:configRequest` / `htmx:afterRequest` / `htmx:afterSwap` to drive two
   synced panels:
-  - **Network panel** — method, URL, request headers, response status, response body.
+  - **Network panel** — method, URL, request headers, response status, response headers,
+    response body.
   - **DOM patch panel** — the live element, with swapped nodes flash-highlighted the
     instant the swap lands.
 - Presets are just attribute combinations (`hx-get` + `hx-trigger` + `hx-swap` + `hx-target`,
