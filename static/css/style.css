@@ -289,6 +289,14 @@ body {
   min-height: 64vh;
 }
 
+/* An explicit display on .rig/.compare-grid would otherwise win over the UA
+   [hidden]{display:none} rule (author origin beats UA), leaving a "hidden" rig
+   still visible when comparison mode swaps them — pin hidden back to none. */
+.rig[hidden],
+.compare-rig[hidden] {
+  display: none;
+}
+
 .panels {
   display: flex;
   flex-direction: column;
