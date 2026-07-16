@@ -101,6 +101,19 @@ test("parseResponseHeaders tolerates a header with no colon", () => {
   assert.deepEqual(parseResponseHeaders("malformed-line\r\n"), [["malformed-line", ""]]);
 });
 
+test("parseResponseHeaders splits only on the first colon, keeping colons in the value", () => {
+  const raw = "Date: Thu, 16 Jul 2026 04:54:07 GMT\r\n";
+  assert.deepEqual(parseResponseHeaders(raw), [["Date", "Thu, 16 Jul 2026 04:54:07 GMT"]]);
+});
+
+test("parseResponseHeaders drops blank lines and trims trailing whitespace", () => {
+  const raw = "Content-Length: 267\r\n\r\nContent-Type: text/html \r\n";
+  assert.deepEqual(parseResponseHeaders(raw), [
+    ["Content-Length", "267"],
+    ["Content-Type", "text/html"],
+  ]);
+});
+
 test("escapeHtml escapes all five reserved characters", () => {
   assert.equal(escapeHtml(`<a href="x" b='y'>&</a>`), "&lt;a href=&quot;x&quot; b=&#39;y&#39;&gt;&amp;&lt;/a&gt;");
 });
