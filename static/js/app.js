@@ -13,6 +13,7 @@ import {
   nextRadioIndex,
   describeRequestOutcome,
 } from "./lab-core.mjs";
+import { setupCompareMode } from "./compare.mjs";
 
 const fields = {
   method: document.querySelector('[data-field="method"]'),
@@ -27,6 +28,20 @@ const fields = {
 const connectorNetwork = document.querySelector(".connector--network");
 const connectorPatch = document.querySelector(".connector--patch");
 const rigPulse = document.querySelector(".rig-pulse");
+
+// Comparison mode owns its own two-lab rig and instrumentation (see
+// compare.mjs); this view drives only the single demo element. The two share
+// the document.body htmx event stream, so the single-view handlers below
+// ignore any event whose element lives inside the comparison rig, and the
+// comparison handlers ignore everything outside it.
+const compareMode = setupCompareMode();
+const compareToggle = document.querySelector("[data-compare-toggle]");
+const compareLabel = document.querySelector('[data-field="compare-label"]');
+
+function isCompareEvent(evt) {
+  const elt = evt.detail && evt.detail.elt;
+  return !!(elt && elt.closest && elt.closest("#compare-rig"));
+}
 
 // The full preset picker's state. Each field is driven by one preset group
 // in the toolbar and, together, they determine every hx-* attribute on the
@@ -126,7 +141,46 @@ function hydrateControlsFromState() {
 function applyPreset() {
   syncDemoElAttributes();
   updateExternalTargetEmphasis();
+  // select/indicator are the only presets that still apply while comparing,
+  // so keep both labs' URLs in step when either is toggled mid-comparison.
+  if (presetState.compare) compareMode.sync(presetState);
   syncUrlToPresetState();
+}
+
+// Enters or leaves comparison mode to match presetState.compare: swaps which
+// rig is visible, reflects the toggle's on/off label, and disables the presets
+// that don't apply while comparing (swap is the axis being compared; trigger is
+// the shared "Fire both" button; target is pinned to self). select/indicator
+// stay live and drive both labs.
+function applyCompareMode() {
+  const on = presetState.compare;
+  if (compareToggle) {
+    compareToggle.classList.toggle("is-on", on);
+    compareToggle.setAttribute("aria-checked", String(on));
+  }
+  if (compareLabel) compareLabel.textContent = on ? "single view" : "compare swaps";
+  setSingleViewPresetsDisabled(on);
+  compareMode.setActive(on);
+  if (on) compareMode.sync(presetState);
+}
+
+function setSingleViewPresetsDisabled(disabled) {
+  document
+    .querySelectorAll('.preset-toggle[data-preset="swap"], .preset-toggle[data-preset="trigger"], .preset-toggle[data-preset="target"]')
+    .forEach((group) => {
+      group.classList.toggle("is-disabled", disabled);
+      group.querySelectorAll(".preset-toggle__option").forEach((btn) => {
+        btn.disabled = disabled;
+      });
+    });
+}
+
+if (compareToggle) {
+  compareToggle.addEventListener("click", () => {
+    presetState.compare = !presetState.compare;
+    applyCompareMode();
+    syncUrlToPresetState();
+  });
 }
 
 // Keeps the address bar's query string equal to encodePresetState(presetState)
@@ -177,6 +231,7 @@ function syncDemoElAttributes() {
 }
 
 document.body.addEventListener("htmx:configRequest", (evt) => {
+  if (isCompareEvent(evt)) return;
   lastRequestState = { swap: presetState.swap, target: presetState.target };
   fields.method.textContent = evt.detail.verb.toUpperCase();
   fields.url.textContent = evt.detail.path;
@@ -186,6 +241,7 @@ document.body.addEventListener("htmx:configRequest", (evt) => {
 });
 
 document.body.addEventListener("htmx:afterRequest", (evt) => {
+  if (isCompareEvent(evt)) return;
   const xhr = evt.detail.xhr;
   const status = xhr.status;
   lastResponseStatus = status;
@@ -200,7 +256,8 @@ document.body.addEventListener("htmx:afterRequest", (evt) => {
   fireConnectors();
 });
 
-document.body.addEventListener("htmx:afterSwap", () => {
+document.body.addEventListener("htmx:afterSwap", (evt) => {
+  if (isCompareEvent(evt)) return;
   syncDemoElAttributes();
 });
 
@@ -213,7 +270,8 @@ document.body.addEventListener("htmx:afterSwap", () => {
 // for afterSettle guarantees htmx's own cleanup has already happened.
 // (updateExternalTargetEmphasis doesn't need this treatment since it now
 // targets the stable .external-target-wrap, never the swapped node.)
-document.body.addEventListener("htmx:afterSettle", () => {
+document.body.addEventListener("htmx:afterSettle", (evt) => {
+  if (isCompareEvent(evt)) return;
   renderPatchPanel();
   announceRequestOutcome();
 });
@@ -351,4 +409,5 @@ function showCopyLinkFeedback(copied) {
 window.addEventListener("resize", positionConnectors);
 hydrateControlsFromState();
 applyPreset();
+applyCompareMode();
 positionConnectors();
