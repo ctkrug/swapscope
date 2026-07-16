@@ -183,14 +183,21 @@ test("splitHighlightSegments highlights multiple separate matches", () => {
 
 test("encodePresetState produces a stable, fully-specified query string", () => {
   assert.equal(
-    encodePresetState({ swap: "outerHTML", trigger: "delay", target: "external", select: true, indicator: false }),
-    "swap=outerHTML&trigger=delay&target=external&select=1&indicator=0"
+    encodePresetState({ swap: "outerHTML", trigger: "delay", target: "external", select: true, indicator: false, compare: false }),
+    "swap=outerHTML&trigger=delay&target=external&select=1&indicator=0&compare=0"
   );
 });
 
 test("encodePresetState round-trips through decodePresetState", () => {
-  const state = { swap: "outerHTML", trigger: "revealed", target: "external", select: true, indicator: true };
+  const state = { swap: "outerHTML", trigger: "revealed", target: "external", select: true, indicator: true, compare: true };
   assert.deepEqual(decodePresetState(encodePresetState(state)), state);
+});
+
+test("decodePresetState treats compare as a boolean flag defaulting to false", () => {
+  assert.equal(decodePresetState("").compare, false);
+  assert.equal(decodePresetState("compare=1").compare, true);
+  assert.equal(decodePresetState("compare=0").compare, false);
+  assert.equal(decodePresetState("compare=true").compare, false);
 });
 
 test("decodePresetState falls back to defaults for a missing query string", () => {

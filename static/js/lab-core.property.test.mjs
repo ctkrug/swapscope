@@ -23,6 +23,7 @@ const presetStateArb = fc.record({
   target: fc.constantFrom(...TARGET_PRESETS),
   select: fc.boolean(),
   indicator: fc.boolean(),
+  compare: fc.boolean(),
 });
 
 test("property: encodePresetState/decodePresetState round-trip for any valid preset state", () => {

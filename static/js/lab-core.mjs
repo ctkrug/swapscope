@@ -12,6 +12,7 @@ export const DEFAULT_PRESET_STATE = {
   target: "self",
   select: false,
   indicator: false,
+  compare: false,
 };
 
 /**
@@ -43,6 +44,7 @@ export function encodePresetState(state) {
   params.set("target", state.target);
   params.set("select", state.select ? "1" : "0");
   params.set("indicator", state.indicator ? "1" : "0");
+  params.set("compare", state.compare ? "1" : "0");
   return params.toString();
 }
 
@@ -63,6 +65,7 @@ export function decodePresetState(search) {
     target: TARGET_PRESETS.includes(target) ? target : DEFAULT_PRESET_STATE.target,
     select: params.get("select") === "1",
     indicator: params.get("indicator") === "1",
+    compare: params.get("compare") === "1",
   };
 }
 
