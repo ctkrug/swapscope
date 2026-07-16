@@ -44,6 +44,17 @@ you *see happen*, not something you infer from a paragraph.
 - [ ] Swap-strategy comparison mode: fire the same trigger against two swap strategies at once.
 - [x] Shareable preset links (state encoded in the URL).
 
+## Run it
+
+```
+make run          # builds bin/attribute-lab and starts it on :8080
+PORT=8090 make run # or pick a port explicitly
+make test          # go test ./... + node --test static/js/*.test.mjs
+```
+
+No database, no build step for the frontend — `static/` is embedded straight into the
+binary via `go:embed`, so `make run` is the entire "getting started."
+
 ## Stack
 
 - **Backend:** Go (`net/http`, stdlib only where practical) serving htmx fragment endpoints
