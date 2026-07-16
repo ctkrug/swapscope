@@ -16,17 +16,26 @@ static/
   index.html                   the single page: preset bar (5 groups), live element + external
                                 target, network + patch panels
   css/style.css                docs/DESIGN.md tokens and the blueprint visual system
+  sw.js                        service worker: answers api/demo in-browser on static hosts
+                                (no Go runtime) via the JS fragment port — see Deployment
   js/
     lab-core.mjs                pure logic: preset URL/trigger-attribute building, status
                                 bucketing, header parsing, escaping, comparison-lab config
                                 derivation, and the gen-scoped highlight splitter — zero DOM
     lab-core.test.mjs           node --test coverage for the above
     lab-core.property.test.mjs  fast-check property tests (round-trip, escaping, highlight)
+    demo-fragment.mjs           byte-for-byte JS port of fragments.go + the stateful api/demo
+                                responder (gen counter, indicator delay) the worker installs
+    demo-fragment.test.mjs      golden-manifest parity test (JS render == Go bytes) + parsing
+    demo-responder.test.mjs     responder unit tests (gen, delay, validate-before-effects)
+    sw.integration.test.mjs     drives sw.js's real listeners under a stubbed worker self
     app.js                      DOM glue: single-view htmx event listeners, preset wiring,
-                                connector lines, and the compare-mode toggle
+                                connector lines, the compare-mode toggle, and SW registration
     compare.mjs                 DOM glue: the two-lab comparison rig — per-lab htmx event
                                 routing, post-swap attribute re-assertion, patch rendering
     compare.smoke.test.mjs      jsdom smoke coverage for app.js + compare.mjs wiring
+testdata/
+  fragments.golden.json        Go-authored fragment bytes both backends assert against
 ```
 
 ## The preset surface
@@ -54,7 +63,12 @@ query string (`swap`, `target`, `select=1`, `indicator=1`).
    afterward is invisible until the element is reprocessed.
 2. Clicking `#demo-el` fires the real htmx request. `htmx:configRequest` is used to read the
    verb/path/headers actually being sent (network panel's "request" side).
-3. `internal/server/fragments.go: handleDemo` renders a fragment shaped by the query string:
+3. The `api/demo` request is answered by whichever backend the deploy has: the Go
+   `internal/server/fragments.go: handleDemo` for `make run`/self-host, or the service worker
+   (`static/sw.js` + `static/js/demo-fragment.mjs`) on the static CDN, which have no Go runtime.
+   Both produce **byte-identical** fragments (pinned by the golden manifest — see Deployment),
+   so this description holds regardless of which one served the bytes. The fragment is shaped by
+   the query string:
    - `swap=innerHTML` → only the replacement content (a `<span data-gen="N">`).
    - `swap=outerHTML` + `target=self` → the *whole* replacement element, re-declaring
      `hx-get`/`hx-target`/`hx-swap` — outerHTML swaps replace the triggering element itself, so
@@ -168,20 +182,40 @@ thin, harder-to-unit-test DOM glue layer; keeping the parsing/formatting logic o
 what makes the interesting bug classes (gen-matching, header parsing, highlight splitting)
 testable in isolation.
 
-## Subpath deployment
+## Deployment (two backends, one fragment contract)
 
-The project is deployed at `apps.charliekrug.com/attribute-lab/`, a subpath, not a domain
-root. Every asset reference (`css/style.css`, `js/app.js`) and the demo fragment endpoint
-(`api/demo`) is relative (no leading slash), and `<base href="./">` in `index.html` makes that
-resolution correct even if the deployed URL is visited without a trailing slash.
+The project is published as **static files to a CDN** (`apps.charliekrug.com/attribute-lab/`, a
+subpath, not a domain root) — there is no Go runtime in production. That's the whole reason the
+service worker exists: a static host would 404 every `api/demo` fetch, killing the entire demo.
+So the fragment logic has two backends behind one byte-for-byte contract:
 
-There's no separate static export step: `make build` produces one self-contained binary
-(`bin/attribute-lab`) with `static/` embedded via `//go:embed`, and that binary serves both
-the frontend and the `/api/demo`/`/healthz` endpoints itself. The reverse proxy in front of
-it strips the `/attribute-lab` prefix before forwarding to the binary's own root-relative
-routes (e.g. nginx `location /attribute-lab/ { proxy_pass http://127.0.0.1:<port>/; }`) —
-this was verified locally by fronting a running instance with a prefix-stripping proxy and
-confirming every asset request and the `/api/demo` fetch resolve with no 404s.
+- **Static CDN (production).** `static/sw.js` is a module service worker scoped to the app root
+  (it lives at the site root, not `js/`, because a worker can only control URLs under its own
+  directory). It intercepts *only* `api/demo` and synthesizes the response in the browser via
+  `demo-fragment.mjs`'s renderer + stateful responder; every other request (page, CSS, JS,
+  fonts) falls through to the network untouched, so there's no asset cache to go stale. htmx
+  still issues a real request and reads real response headers off it — only the byte *source*
+  moves from the Go process to the worker, preserving VISION's "real requests, not mocked."
+- **`make run` / self-host.** The Go binary (`main.go`, `static/` embedded via `//go:embed`)
+  serves the frontend and answers `api/demo`/`healthz` itself. The worker registers here too and
+  is a harmless, identical shim.
+
+**The contract.** `internal/server/golden_test.go` renders every swap × target × select
+fragment with Go into `testdata/fragments.golden.json`; both the Go renderer and the JS port
+(`demo-fragment.test.mjs`) assert against that one file, so any drift between the two backends
+fails a test. Regenerate after an intentional fragment change with
+`UPDATE_GOLDEN=1 go test ./internal/server -run TestFragmentGolden`.
+
+**Subpath resolution.** Every asset reference and the `api/demo` endpoint is relative (no leading
+slash), and `<base href="./">` in `index.html` makes that correct even when the deployed URL is
+visited without a trailing slash. The worker's registration path (`sw.js`) and its own import
+(`./js/demo-fragment.mjs`) are likewise relative, so the same files work at a subpath or the
+domain root with no build-time rewriting.
+
+**First-visit note.** `skipWaiting` + `clients.claim()` let the worker take control of the
+already-open page shortly after a fresh first load — well before a human clicks a preset. On the
+rare race where the very first fire beats activation, that one request hits the network; a
+reload (by which point the worker controls the page) resolves it.
 
 ## Test coverage and hardening notes
 
