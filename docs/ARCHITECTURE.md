@@ -145,6 +145,28 @@ routes (e.g. nginx `location /attribute-lab/ { proxy_pass http://127.0.0.1:<port
 this was verified locally by fronting a running instance with a prefix-stripping proxy and
 confirming every asset request and the `/api/demo` fetch resolve with no 404s.
 
+## Test coverage and hardening notes
+
+`internal/server` is at 100% line coverage and `static/js/lab-core.mjs` at 100% line / ~96%
+branch coverage (`node --test --experimental-test-coverage`). A few non-obvious things the
+test suite pins down, worth knowing before "simplifying" the code they cover:
+
+- **`handleDemo`'s own `r.Method != http.MethodGet` check is reachable only via HEAD.** The
+  route is registered as `"GET /api/demo"`, so Go's `net/http.ServeMux` (1.22+) rejects every
+  other verb with its own 405 before `handleDemo` ever runs — except HEAD, which the mux
+  routes to the GET handler per net/http's documented "GET matches HEAD too" behavior. See
+  `TestDemoFragmentRejectsHeadRequest`.
+- **The demo gen counter is `-race`-clean under real concurrency**, not just sequentially
+  incrementing (`TestDemoFragmentGenerationIsUniqueUnderConcurrentRequests`, 50 concurrent
+  requests). CI and `make test-go` both run `go test -race`.
+- **`splitHighlightSegments`/`findMatchingTagEnd` degrade to "no highlight" rather than
+  throwing** on truncated/malformed markup (a response cut off mid-stream) and correctly
+  depth-track a tag nested inside another tag of the *same* name, even though no current
+  fragment shape actually produces that nesting.
+- **`decodePresetState` was fuzzed with script-shaped and emoji query values** (encoded
+  `<script>` tags, unicode) and repeated keys — falls back to `DEFAULT_PRESET_STATE`
+  per-field rather than partially trusting the input.
+
 ## Running it
 
 ```
