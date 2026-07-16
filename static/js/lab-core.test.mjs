@@ -202,6 +202,11 @@ test("decodePresetState uses the first value when a key repeats", () => {
   });
 });
 
+test("decodePresetState tolerates unicode and script-shaped values by falling back to defaults", () => {
+  const search = "swap=" + encodeURIComponent("<script>alert(1)</script>") + "&target=" + encodeURIComponent("💥");
+  assert.deepEqual(decodePresetState(search), DEFAULT_PRESET_STATE);
+});
+
 test("nextRadioIndex moves forward on ArrowRight/ArrowDown and wraps at the end", () => {
   assert.equal(nextRadioIndex(0, "ArrowRight", 3), 1);
   assert.equal(nextRadioIndex(2, "ArrowRight", 3), 0);
