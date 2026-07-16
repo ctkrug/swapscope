@@ -68,6 +68,14 @@
         </button>
       </div>
 
+      <div class="preset-group">
+        <span class="preset-group__label">mode</span>
+        <button type="button" class="mode-toggle" data-compare-toggle role="switch" aria-checked="false">
+          <span class="mode-toggle__glyph" aria-hidden="true">⇋</span>
+          <span data-field="compare-label">compare swaps</span>
+        </button>
+      </div>
+
       <button type="button" class="copy-link-btn" data-copy-link>
         <span aria-hidden="true">⧉</span>
         <span data-field="copy-link-label" aria-live="polite">copy link</span>
@@ -130,6 +138,61 @@
 
         <section class="zone zone--patch" aria-label="DOM patch panel">
           <p class="zone__annotation">PATCH →</p>
+          <pre class="patch-panel__code" data-field="patch-markup">—</pre>
+        </section>
+      </div>
+    </div>
+
+    <div class="compare-rig" id="compare-rig" hidden>
+      <div class="compare-bar">
+        <p class="compare-bar__hint">Same request, two swap strategies, side by side.</p>
+        <button type="button" class="compare-fire" id="compare-fire">
+          <span aria-hidden="true">▶</span> Fire both
+        </button>
+      </div>
+
+      <div class="compare-grid">
+        <section class="compare-lab" data-lab-swap="innerHTML" aria-label="innerHTML comparison lab">
+          <p class="compare-lab__title"><code>hx-swap="innerHTML"</code></p>
+          <div class="compare-lab__stage">
+            <button class="demo-el demo-el--compare" data-lab-el id="cmp-inner-el" data-gen="0"
+              hx-get="api/demo?swap=innerHTML&amp;target=self"
+              hx-target="#cmp-inner-el"
+              hx-swap="innerHTML"
+              hx-trigger="click from:#compare-fire"
+              hx-indicator="#cmp-inner-indicator">
+              <span class="demo-el__label" data-gen="0">idle</span>
+            </button>
+            <span id="cmp-inner-indicator" class="htmx-indicator" aria-hidden="true">&#9679; awaiting response&hellip;</span>
+          </div>
+          <dl class="network-panel network-panel--compare">
+            <div class="network-panel__row"><dt>status</dt><dd data-field="status" class="status-chip">—</dd></div>
+          </dl>
+          <p class="network-panel__label">response body</p>
+          <pre class="network-panel__code" data-field="response-body">—</pre>
+          <p class="network-panel__label">DOM patch</p>
+          <pre class="patch-panel__code" data-field="patch-markup">—</pre>
+        </section>
+
+        <section class="compare-lab" data-lab-swap="outerHTML" aria-label="outerHTML comparison lab">
+          <p class="compare-lab__title"><code>hx-swap="outerHTML"</code></p>
+          <div class="compare-lab__stage">
+            <button class="demo-el demo-el--compare" data-lab-el id="cmp-outer-el" data-gen="0"
+              hx-get="api/demo?swap=outerHTML&amp;target=self"
+              hx-target="#cmp-outer-el"
+              hx-swap="outerHTML"
+              hx-trigger="click from:#compare-fire"
+              hx-indicator="#cmp-outer-indicator">
+              <span class="demo-el__label" data-gen="0">idle</span>
+            </button>
+            <span id="cmp-outer-indicator" class="htmx-indicator" aria-hidden="true">&#9679; awaiting response&hellip;</span>
+          </div>
+          <dl class="network-panel network-panel--compare">
+            <div class="network-panel__row"><dt>status</dt><dd data-field="status" class="status-chip">—</dd></div>
+          </dl>
+          <p class="network-panel__label">response body</p>
+          <pre class="network-panel__code" data-field="response-body">—</pre>
+          <p class="network-panel__label">DOM patch</p>
           <pre class="patch-panel__code" data-field="patch-markup">—</pre>
         </section>
       </div>
