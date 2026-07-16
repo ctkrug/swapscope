@@ -166,6 +166,17 @@ func TestDemoFragmentSelectMarksTheExternalOuterHTMLWrapper(t *testing.T) {
 	}
 }
 
+func TestDemoFragmentSetsHTMLContentType(t *testing.T) {
+	// htmx routes a response into the DOM by content type, and the network
+	// panel now renders this header verbatim — so the fragment must always
+	// declare itself as UTF-8 HTML.
+	rec := fireDemo(t, "?swap=outerHTML")
+
+	if got, want := rec.Header().Get("Content-Type"), "text/html; charset=utf-8"; got != want {
+		t.Fatalf("Content-Type = %q, want %q", got, want)
+	}
+}
+
 func TestDemoFragmentSelectMarksOnlyTheSwapRoot(t *testing.T) {
 	// hx-select="[data-fragment-content]" resolves via
 	// fragment.querySelectorAll(selector), and htmx moves every match into the
