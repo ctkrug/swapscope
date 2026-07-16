@@ -9,7 +9,7 @@ run: build
 test: test-go test-js
 
 test-go:
-	go test ./...
+	go test -race ./...
 
 test-js:
 	node --test static/js/*.test.mjs
