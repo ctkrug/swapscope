@@ -70,6 +70,26 @@ export function decodePresetState(search) {
 }
 
 /**
+ * Derives the two per-lab preset configs for comparison mode from a base
+ * preset state. Comparison mode holds every axis fixed except hx-swap and
+ * fires both strategies at once, so the two configs differ only in `swap`
+ * (one per entry of SWAP_STYLES, in order) and share the base's select /
+ * indicator flags. Target is pinned to "self": the comparison the vision
+ * centers on is innerHTML vs. outerHTML against the element itself, and an
+ * external target would need its own destination node per lab. Pure so the
+ * frontend's per-lab wiring has a single, testable source of truth for what
+ * each side's URL and swap attribute should be.
+ */
+export function comparisonLabConfigs({ select = false, indicator = false } = {}) {
+  return SWAP_STYLES.map((swap) => ({
+    swap,
+    target: "self",
+    select,
+    indicator,
+  }));
+}
+
+/**
  * Builds the concise, screen-reader-friendly sentence announced by the
  * status-announcer live region after each request/patch cycle. The network
  * and DOM patch panels are visually rich but too verbose to dump into an

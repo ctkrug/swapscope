@@ -12,6 +12,7 @@ import {
   DEFAULT_PRESET_STATE,
   nextRadioIndex,
   describeRequestOutcome,
+  comparisonLabConfigs,
 } from "./lab-core.mjs";
 
 test("demoUrl builds a relative, subpath-safe URL defaulting target to self", () => {
@@ -191,6 +192,39 @@ test("encodePresetState produces a stable, fully-specified query string", () => 
 test("encodePresetState round-trips through decodePresetState", () => {
   const state = { swap: "outerHTML", trigger: "revealed", target: "external", select: true, indicator: true, compare: true };
   assert.deepEqual(decodePresetState(encodePresetState(state)), state);
+});
+
+test("comparisonLabConfigs yields one config per swap style, differing only in swap", () => {
+  const configs = comparisonLabConfigs({ select: false, indicator: false });
+  assert.equal(configs.length, 2);
+  assert.equal(configs[0].swap, "innerHTML");
+  assert.equal(configs[1].swap, "outerHTML");
+  assert.deepEqual(
+    configs.map((c) => c.target),
+    ["self", "self"]
+  );
+});
+
+test("comparisonLabConfigs propagates select and indicator to both labs", () => {
+  const configs = comparisonLabConfigs({ select: true, indicator: true });
+  for (const c of configs) {
+    assert.equal(c.select, true);
+    assert.equal(c.indicator, true);
+    assert.equal(c.target, "self");
+  }
+});
+
+test("comparisonLabConfigs defaults select/indicator to false with no base", () => {
+  for (const c of comparisonLabConfigs()) {
+    assert.equal(c.select, false);
+    assert.equal(c.indicator, false);
+  }
+});
+
+test("comparisonLabConfigs produces URLs demoUrl accepts for both labs", () => {
+  for (const c of comparisonLabConfigs({ select: true, indicator: true })) {
+    assert.match(demoUrl(c), /^api\/demo\?swap=(inner|outer)HTML&target=self/);
+  }
 });
 
 test("decodePresetState treats compare as a boolean flag defaulting to false", () => {
