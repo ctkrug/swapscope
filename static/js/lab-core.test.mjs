@@ -153,6 +153,11 @@ test("splitHighlightSegments ignores a data-gen marker with no opening angle bra
   assert.deepEqual(splitHighlightSegments(markup, 4), [{ text: markup, highlighted: false }]);
 });
 
+test("splitHighlightSegments matches the outer boundary across same-tag-name nesting", () => {
+  const markup = '<span data-gen="9">before<span>inner</span>after</span>';
+  assert.deepEqual(splitHighlightSegments(markup, 9), [{ text: markup, highlighted: true }]);
+});
+
 test("splitHighlightSegments highlights multiple separate matches", () => {
   const markup = '<span data-gen="2">a</span><i>gap</i><span data-gen="2">b</span>';
   const segments = splitHighlightSegments(markup, 2);
